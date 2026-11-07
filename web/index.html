@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, interactive-widget=resizes-content" />
+    <title>ESP32 聊天</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div id="backdrop"></div>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <button class="new-btn" id="newBtn" data-i18n="newSessionBtn">＋ 新建会话</button>
+        <button id="sideClose" data-i18n-title="closeSidebar">✕</button>
+      </div>
+      <div id="convList"></div>
+      <div class="sidebar-foot" id="sideFoot">—</div>
+    </aside>
+    <main class="main">
+      <div class="main-head">
+        <button class="menu-btn" id="sideToggle" data-i18n-title="sessionList">☰</button>
+        <span id="convTitle">新会话</span>
+        <button id="settingsBtn" data-i18n-title="settingsTitle">⚙</button>
+      </div>
+      <div id="log"></div>
+      <div id="bar">
+        <input id="q" data-i18n-placeholder="placeholder" placeholder="输入问题，回车发送" autocomplete="off" />
+        <button id="send" data-i18n="send">发送</button>
+      </div>
+    </main>
+    <div id="settings" class="settings hidden">
+      <div class="settings-panel">
+        <h3 data-i18n="settings">设置</h3>
+        <label for="setLang" data-i18n="language">语言</label>
+        <select id="setLang">
+          <option value="zh">中文</option>
+          <option value="en">English</option>
+        </select>
+        <label for="setTheme" data-i18n="theme">主题</label>
+        <select id="setTheme">
+          <option value="light" data-i18n="themeLight">浅色</option>
+          <option value="dark" data-i18n="themeDark">深色</option>
+        </select>
+        <label for="setPalette" data-i18n="palette">配色</label>
+        <select id="setPalette">
+          <option value="blue" data-i18n="paletteBlue">经典蓝</option>
+          <option value="green" data-i18n="paletteGreen">护眼绿</option>
+          <option value="purple" data-i18n="palettePurple">静谧紫</option>
+          <option value="orange" data-i18n="paletteOrange">暖橙</option>
+          <option value="teal" data-i18n="paletteTeal">青碧</option>
+        </select>
+        <label for="setBackend" data-i18n="backend">后端</label>
+        <select id="setBackend">
+          <option value="0" data-i18n="ollamaLan">Ollama（局域网）</option>
+          <option value="1" data-i18n="deepseekCloud">DeepSeek（云）</option>
+        </select>
+        <label for="setModel" data-i18n="model">模型</label>
+        <select id="setModel"></select>
+        <div class="settings-actions">
+          <button id="setCancel" data-i18n="cancel">取消</button>
+          <button id="setSave" data-i18n="saveApply">保存并生效</button>
+        </div>
+        <div id="setMsg"></div>
+      </div>
+    </div>
+    <script src="/marked.min.js"></script>
+    <script src="/highlight.min.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESP32 内存监控</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1a1a1a; --dim: #5a5a5a; --line: #d8d4c8;
+    --rom: #b9b3a5; --data: #8fa8c8; --bss: #7e93ab; --used: #d9a441; --free: #f2ecd5;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 20px 60px; background: var(--bg); color: var(--fg);
+    font-family: 'Source Han Sans SC', 'Noto Sans CJK SC', 'PingFang SC', 'Microsoft YaHei', sans-serif; }
+  .wrap { max-width: 1000px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0; }
+  .head { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+  .gear { margin-left: auto; background: none; border: 0; font-size: 20px; cursor: pointer; color: #333; }
+  .settings { position: fixed; inset: 0; background: rgba(0,0,0,.35); display: flex; align-items: center;
+    justify-content: center; z-index: 40; }
+  .settings.hidden { display: none; }
+  .settings-panel { background: #fff; border-radius: 12px; padding: 16px; width: min(320px, 90vw);
+    display: flex; flex-direction: column; gap: 8px; box-shadow: 0 8px 30px rgba(0,0,0,.2); }
+  .settings-panel h3 { margin: 0 0 4px; font-size: 16px; }
+  .settings-panel label { font-size: 13px; color: var(--dim); }
+  .settings-panel select { padding: 8px; border: 1px solid var(--line); border-radius: 8px;
+    font-size: 15px; background: #fff; }
+  .settings-actions { display: flex; gap: 8px; margin-top: 6px; }
+  .settings-actions button { flex: 1; padding: 8px; border: 0; border-radius: 8px;
+    cursor: pointer; font-size: 14px; background: #2b3a4a; color: #fff; }
+  .sub { color: var(--dim); font-size: 13px; margin-bottom: 18px; }
+  .panel { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; margin-bottom: 16px; }
+  .row { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+  .toggle { display: inline-flex; border: 1px solid #bbb; border-radius: 7px; overflow: hidden; }
+  .toggle button { border: 0; background: #fff; padding: 7px 16px; font: inherit; font-size: 13px; cursor: pointer; color: #555; }
+  .toggle button.on { background: #2b3a4a; color: #fff; font-weight: 600; }
+  .btn { background: #2b3a4a; color: #fff; border: 0; border-radius: 7px; padding: 8px 18px; font: inherit; font-size: 13px; cursor: pointer; }
+  .btn:disabled { background: #aaa; }
+  canvas { width: 100%; height: 220px; display: block; }
+  #chart { margin-top: 16px; }
+  #chart2 { height: 150px; margin-top: 8px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 14px; }
+  .stat { background: #faf9f5; border: 1px solid #e4e0d5; border-radius: 8px; padding: 8px 12px; }
+  .stat .k { font-size: 11px; color: #888; }
+  .stat .v { font-size: 18px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: 12px; color: #444; }
+  .legend i { display: inline-block; width: 12px; height: 10px; border: 1px solid #999; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 8px; }
+  table { border-collapse: collapse; width: 100%; min-width: 420px; font-size: 12px; table-layout: fixed; }
+  th, td { border: 1px solid #ddd; padding: 4px 8px; text-align: left; word-break: break-word; }
+  th:nth-child(1) { width: 34%; }
+  th:nth-child(2) { width: 14%; }
+  th:nth-child(3) { width: 18%; }
+  th:nth-child(4) { width: 18%; }
+  th:nth-child(5) { width: 16%; }
+  td:nth-child(2), td:nth-child(3), td:nth-child(4), td:nth-child(5) { font-variant-numeric: tabular-nums; }
+  th { background: #f2f5f7; }
+  .status { font-size: 12px; color: var(--dim); white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; flex: 1; min-width: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head"><h1 data-i18n="memTitle">ESP32 内存监控</h1><button class="gear" id="settingsBtn">⚙</button></div>
+
+  <div class="panel">
+    <div class="row">
+      <div class="toggle">
+        <button id="btnLive" class="on" data-i18n="liveMode">实时</button>
+        <button id="btnReplay" data-i18n="replayMode">回放</button>
+      </div>
+      <span class="status" id="status" data-i18n="connecting">连接中…</span>
+    </div>
+    <canvas id="chart" width="900" height="220"></canvas>
+    <canvas id="chart2" width="900" height="150"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--rom)"></i><span data-i18n="legendRom">ROM/BT</span></span>
+      <span><i style="background:var(--data)"></i><span data-i18n="legendData">.data</span></span>
+      <span><i style="background:var(--bss)"></i><span data-i18n="legendBss">.bss</span></span>
+      <span><i style="background:var(--used)"></i><span data-i18n="legendUsed">堆已用</span></span>
+      <span><i style="background:var(--free)"></i><span data-i18n="legendFree">堆空闲</span></span>
+      <span><i style="background:rgba(192,90,26,.9)"></i><span data-i18n="legendMin">本轮最低 free</span></span>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="k" data-i18n="kDram">总 DRAM</div><div class="v" id="vDram">—</div></div>
+      <div class="stat"><div class="k" data-i18n="kTotalUsed">总占用</div><div class="v" id="vTotalUsed">—</div></div>
+      <div class="stat"><div class="k" data-i18n="kRom">ROM/BT</div><div class="v" id="vRom">—</div></div>
+      <div class="stat"><div class="k" data-i18n="kData">.data</div><div class="v" id="vData">—</div></div>
+      <div class="stat"><div class="k" data-i18n="kBss">.bss</div><div class="v" id="vBss">—</div></div>
+      <div class="stat"><div class="k" data-i18n="kUsed">堆已用</div><div class="v" id="vUsed">—</div></div>
+      <div class="stat"><div class="k" data-i18n="kFree">堆空闲</div><div class="v" id="vFree">—</div></div>
+      <div class="stat"><div class="k" data-i18n="kMin">本轮最低 free</div><div class="v" id="vMin">—</div></div>
+      <div class="stat"><div class="k" data-i18n="kMax">最大连续块</div><div class="v" id="vMax">—</div></div>
+      <div class="stat"><div class="k" data-i18n="kStack">栈剩余</div><div class="v" id="vStack">—</div></div>
+    </div>
+  </div>
+
+  <div class="panel" id="replayPanel" style="display:none">
+    <h2 style="font-size:14px;margin:0 0 8px" data-i18n="replayTitle">最近一次对话的阶段采样</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th data-i18n="thStage">阶段</th><th data-i18n="thTime">时间(ms)</th><th data-i18n="thFree">free</th><th data-i18n="thMax">maxAlloc</th><th data-i18n="thStack">栈剩余</th></tr></thead>
+        <tbody id="samples"><tr><td colspan="5" data-i18n="replayHint">回放后显示阶段数据</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<div id="settings" class="settings hidden">
+  <div class="settings-panel">
+    <h3 data-i18n="settingsTitle">设置</h3>
+    <label for="setLang" data-i18n="language">语言</label>
+    <select id="setLang">
+      <option value="zh">中文</option>
+      <option value="en">English</option>
+    </select>
+    <div class="settings-actions">
+      <button id="setClose" data-i18n="closeBtn">关闭</button>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  var DRAM_TOTAL = 335872, ROM_BT = 64348, DATA = 25413, BSS = 84336, HEAP_TOTAL = 161784;
+  var canvas = document.getElementById('chart');
+  var ctx = canvas.getContext('2d');
+  var W = canvas.width, H = canvas.height;
+  var mode = 'live', timer = null, replayTimer = null;
+  var liveCols = [], MAXCOL = 45;  // 列宽 = W/MAXCOL*0.92（现约 18.4px，原两倍）
+  var CW = W / MAXCOL * 0.92;  // 固定列宽：两图共用，横坐标严格对应
+  var GAP = CW * 0.08;
+
+  // ---------- 中英双语（与主聊天页共用 esp32-chat-lang 偏好） ----------
+  var LANG_KEY = 'esp32-chat-lang';
+  var I18N = {
+    zh: {
+      memTitle: 'ESP32 内存监控',
+      liveMode: '实时', replayMode: '回放',
+      connecting: '连接中…',
+      legendRom: 'ROM/BT', legendData: '.data', legendBss: '.bss',
+      legendUsed: '堆已用', legendFree: '堆空闲', legendMin: '本轮最低 free',
+      kDram: '总 DRAM', kTotalUsed: '总占用', kRom: 'ROM/BT', kData: '.data', kBss: '.bss',
+      kUsed: '堆已用', kFree: '堆空闲', kMin: '本轮最低 free',
+      kMax: '最大连续块', kStack: '栈剩余',
+      replayTitle: '最近一次对话的阶段采样',
+      thStage: '阶段', thTime: '时间(ms)', thFree: 'free', thMax: 'maxAlloc', thStack: '栈剩余',
+      replayHint: '回放后显示阶段数据',
+      loadReplay: '读取最近一次对话的采样…',
+      noData: '还没有对话数据：请先在聊天页发一条消息，再回来回放',
+      noSamples: '暂无采样数据',
+      replayDone: '回放完成 · 共 {n} 个采样点',
+      liveStatus: '实时 · 每 0.5s 采样 · 本轮进行中',
+      liveIdle: '实时 · 每 0.5s 采样 · 本轮已结束',
+      connectFail: '连接失败：', readFail: '读取失败：',
+      authHint: '（请先经浏览器认证访问本页）',
+      settingsTitle: '设置', language: '语言', closeBtn: '关闭',
+    },
+    en: {
+      memTitle: 'ESP32 Memory Monitor',
+      liveMode: 'Live', replayMode: 'Replay',
+      connecting: 'Connecting…',
+      legendRom: 'ROM/BT', legendData: '.data', legendBss: '.bss',
+      legendUsed: 'Heap used', legendFree: 'Heap free', legendMin: 'Min free (round)',
+      kDram: 'Total DRAM', kTotalUsed: 'Total used', kRom: 'ROM/BT', kData: '.data', kBss: '.bss',
+      kUsed: 'Heap used', kFree: 'Heap free', kMin: 'Min free (round)',
+      kMax: 'Max block', kStack: 'Stack left',
+      replayTitle: 'Stage samples of the last chat',
+      thStage: 'Stage', thTime: 'Time (ms)', thFree: 'free', thMax: 'maxAlloc', thStack: 'Stack left',
+      replayHint: 'Stage data appears after replay',
+      loadReplay: 'Reading samples of the last chat…',
+      noData: 'No chat data yet: send a message on the chat page, then come back to replay',
+      noSamples: 'No samples yet',
+      replayDone: 'Replay done · {n} samples',
+      liveStatus: 'Live · sampling every 0.5s · round in progress',
+      liveIdle: 'Live · sampling every 0.5s · round finished',
+      connectFail: 'Connection failed: ', readFail: 'Read failed: ',
+      authHint: ' (authenticate in the browser first)',
+      settingsTitle: 'Settings', language: 'Language', closeBtn: 'Close',
+    },
+  };
+  function pickLang() {
+    var saved = localStorage.getItem(LANG_KEY);
+    if (saved === 'zh' || saved === 'en') return saved;
+    var nl = (navigator.language || 'en').toLowerCase();
+    return nl.indexOf('zh') === 0 ? 'zh' : 'en';
+  }
+  var lang = pickLang();
+  function t(key) {
+    return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
+  }
+  var lastSamples = null, replayDone = false, replayCount = 0;
+
+  // 状态行统一入口：单行省略显示，完整文本进 title（悬停可看）
+  function setStatus(text) {
+    var el = document.getElementById('status');
+    el.textContent = text;
+    el.title = text;
+  }
+
+  function renderSamples() {
+    var tb = document.getElementById('samples');
+    if (lastSamples === null) return;
+    if (!lastSamples.length) {
+      tb.innerHTML = '<tr><td colspan="5">' + t('noSamples') + '</td></tr>';
+      return;
+    }
+    tb.innerHTML = lastSamples.map(function (s) {
+      return '<tr><td>' + s.name + '</td><td>' + fmt(s.ms) + '</td><td>' + fmt(s.free) + '</td><td>' + fmt(s.maxAlloc) + '</td><td>' + fmt(s.stackLeft) + '</td></tr>';
+    }).join('');
+  }
+
+  function applyI18n() {
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    document.title = t('memTitle');
+    var els = document.querySelectorAll('[data-i18n]');
+    for (var i = 0; i < els.length; i++) els[i].textContent = t(els[i].dataset.i18n);
+    var sb = document.getElementById('settingsBtn');
+    if (sb) sb.title = t('settingsTitle');
+    var sl = document.getElementById('setLang');
+    if (sl) sl.value = lang;
+    if (mode === 'live') setStatus(t(lastActive ? 'liveStatus' : 'liveIdle'));
+    else if (replayDone) setStatus(t('replayDone').replace('{n}', replayCount));
+    else if (lastSamples !== null && !lastSamples.length) setStatus(t('noData'));
+    else if (mode === 'replay') setStatus(t('loadReplay'));
+    renderSamples();
+  }
+
+  function segsFor(free) {
+    free = Math.max(0, Math.min(free, HEAP_TOTAL));
+    var used = HEAP_TOTAL - free;
+    return [
+      { color: '#b9b3a5', v: ROM_BT },
+      { color: '#8fa8c8', v: DATA },
+      { color: '#7e93ab', v: BSS },
+      { color: '#d9a441', v: used },
+      { color: '#f2ecd5', v: free },
+    ];
+  }
+  function drawCols(cols) {
+    ctx.clearRect(0, 0, W, H);
+    var total = ROM_BT + DATA + BSS + HEAP_TOTAL;
+    var n = cols.length;
+    if (!n) return;
+    var cw = CW, gap = GAP;
+    cols.forEach(function (c, i) {
+      var x = i * (cw + gap) + 1;
+      var y = H;
+      segsFor(c.free).forEach(function (s) {
+        var h = (s.v / total) * H;
+        ctx.fillStyle = s.color;
+        ctx.fillRect(x, y - h, cw, h);
+        y -= h;
+      });
+      // 底部 2px 绿条：栈剩余标记（相对比例）
+      ctx.fillStyle = 'rgba(74,138,74,.9)';
+      ctx.fillRect(x, H - 2, cw, 2);
+    });
+  }
+  function fmt(n) {
+    return String(n == null ? 0 : n).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+  // 本轮最低 free 参考线：画在本轮最低水位（堆已用最高处），只在新低时上移，不随当前值下沉
+  function drawMinFreeLine(minFree) {
+    if (!minFree) return;
+    var total = ROM_BT + DATA + BSS + HEAP_TOTAL;
+    var usedAtMin = HEAP_TOTAL - Math.min(minFree, HEAP_TOTAL);
+    var y = H - ((ROM_BT + DATA + BSS + usedAtMin) / total) * H;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(192, 90, 26, 0.95)';
+    ctx.lineWidth = 1.5;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(W, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // ---------- 第二张图：只显示堆段（161,784 B），堆的变动更明显 ----------
+  var canvas2 = document.getElementById('chart2');
+  var ctx2 = canvas2.getContext('2d');
+  var W2 = canvas2.width, H2 = canvas2.height;
+  var gMinFree = 0;
+  var lastActive = false;  // 用于检测「新一轮对话」（active false->true 时清空历史列）
+
+  function drawHeapCols(cols, minFree) {
+    ctx2.clearRect(0, 0, W2, H2);
+    var n = cols.length;
+    if (!n) return;
+    var cw = CW, gap = GAP;
+    cols.forEach(function (c, i) {
+      var x = i * (cw + gap) + 1;
+      var free = Math.max(0, Math.min(c.free || 0, HEAP_TOTAL));
+      var usedH = ((HEAP_TOTAL - free) / HEAP_TOTAL) * H2;
+      var freeH = (free / HEAP_TOTAL) * H2;
+      ctx2.fillStyle = '#d9a441';
+      ctx2.fillRect(x, H2 - usedH, cw, usedH);
+      ctx2.fillStyle = '#f2ecd5';
+      ctx2.fillRect(x, H2 - usedH - freeH, cw, freeH);
+    });
+    // 本轮最低 free 线
+    if (minFree) {
+      var y = H2 - ((HEAP_TOTAL - Math.min(minFree, HEAP_TOTAL)) / HEAP_TOTAL) * H2;
+      ctx2.strokeStyle = 'rgba(192, 90, 26, 0.95)';
+      ctx2.lineWidth = 1.5;
+      ctx2.setLineDash([6, 4]);
+      ctx2.beginPath();
+      ctx2.moveTo(0, y);
+      ctx2.lineTo(W2, y);
+      ctx2.stroke();
+      ctx2.setLineDash([]);
+    }
+  }
+
+  var DRAM_ALL = ROM_BT + DATA + BSS + HEAP_TOTAL;
+  function pct(v) {
+    return (v / DRAM_ALL * 100).toFixed(1) + '%';
+  }
+  function setStats(free, minFree, maxAlloc, stackLeft) {
+    var used = Math.max(0, HEAP_TOTAL - free);
+    document.getElementById('vDram').textContent = fmt(DRAM_ALL) + ' (100.0%)';
+    var totalUsed = Math.max(0, DRAM_ALL - free);
+    document.getElementById('vTotalUsed').textContent = fmt(totalUsed) + ' (' + pct(totalUsed) + ')';
+    document.getElementById('vRom').textContent = fmt(ROM_BT) + ' (' + pct(ROM_BT) + ')';
+    document.getElementById('vData').textContent = fmt(DATA) + ' (' + pct(DATA) + ')';
+    document.getElementById('vBss').textContent = fmt(BSS) + ' (' + pct(BSS) + ')';
+    document.getElementById('vUsed').textContent = fmt(used) + ' (' + pct(used) + ')';
+    document.getElementById('vFree').textContent = fmt(free) + ' (' + pct(free) + ')';
+    document.getElementById('vMin').textContent = fmt(minFree) + ' (' + pct(minFree) + ')';
+    document.getElementById('vMax').textContent = fmt(maxAlloc);
+    document.getElementById('vStack').textContent = fmt(stackLeft);
+  }
+
+  // ---------- 实时 ----------
+  function startLive() {
+    stopAll();
+    mode = 'live';
+    document.getElementById('btnLive').classList.add('on');
+    document.getElementById('btnReplay').classList.remove('on');
+    document.getElementById('replayPanel').style.display = 'none';
+    liveCols = [];
+    tickLive();
+    timer = setInterval(tickLive, 500);
+  }
+  // 局域网直连（无端口/80）走 81 独立端口（对话期间主循环阻塞时仍可用）；
+  // 经代理访问（如公网 :8090）走同源 /api/mem——proxy 会把 /api/mem 转发到板子 81。
+  var MEM_DIRECT = location.port === '' || location.port === '80';
+  var MEM_URL = MEM_DIRECT
+    ? location.protocol + '//' + location.hostname + ':81/api/mem'
+    : '/api/mem';
+
+  function fetchWithTimeout(url, ms) {
+    return new Promise(function (resolve, reject) {
+      var ctrl = new AbortController();
+      var t = setTimeout(function () {
+        ctrl.abort();
+        reject(new Error('timeout'));
+      }, ms);
+      fetch(url, { cache: 'no-store', signal: ctrl.signal }).then(function (r) {
+        clearTimeout(t);
+        resolve(r);
+      }, function (e) {
+        clearTimeout(t);
+        reject(e);
+      });
+    });
+  }
+
+  function fetchMem() {
+    if (!MEM_DIRECT) {
+      // 经代理：同源请求（浏览器已缓存 Basic 认证），proxy 转发到板子 81
+      return fetch('/api/mem', { cache: 'no-store' }).then(function (r) {
+        if (!r.ok) {
+          throw new Error('HTTP ' + r.status + t('authHint'));
+        }
+        return r.json();
+      });
+    }
+    // 局域网直连：先试 81（2.5s 超时），失败回退同源（非对话期间可用）
+    return fetchWithTimeout(MEM_URL, 2500).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).catch(function () {
+      return fetch('/api/mem', { cache: 'no-store' }).then(function (r) {
+        return r.json();
+      });
+    });
+  }
+
+  function tickLive() {
+    if (mode !== 'live') return;
+    fetchMem()
+      .then(function (d) {
+        if (mode !== 'live') return;  // 期间已切到回放：丢弃这次结果
+        if (!lastActive && d.active) {
+          // 新一轮对话开始：清空历史列，最低 free 线从新值重新开始
+          liveCols = [];
+          gMinFree = 0;
+        }
+        lastActive = !!d.active;
+        liveCols.push({ free: d.free || 0 });
+        if (liveCols.length > MAXCOL) liveCols.shift();
+        gMinFree = d.minFree || 0;
+        var liveMin = liveCols.reduce(function (m, c) {
+          return m == null || c.free < m ? c.free : m;
+        }, null);
+        var lineMin = liveMin == null ? gMinFree : Math.min(gMinFree || Infinity, liveMin);
+        drawCols(liveCols);
+        drawMinFreeLine(lineMin);
+        drawHeapCols(liveCols, lineMin);
+        setStats(d.free || 0, d.minFree || 0, d.maxAlloc || 0, d.stackLeft || 0);
+        setStatus(t(d.active ? 'liveStatus' : 'liveIdle'));
+      })
+      .catch(function (e) {
+        if (mode !== 'live') return;
+        setStatus(t('connectFail') + e);
+      });
+  }
+
+  // ---------- 回放：只回放最近一次对话（不发请求） ----------
+  function startReplay() {
+    stopAll();
+    mode = 'replay';
+    document.getElementById('btnReplay').classList.add('on');
+    document.getElementById('btnLive').classList.remove('on');
+    document.getElementById('replayPanel').style.display = 'block';
+    loadReplay();
+  }
+
+  async function loadReplay() {
+    replayDone = false;
+    setStatus(t('loadReplay'));
+    try {
+      var d = await fetchMem();
+      if (mode !== 'replay') return;  // 期间已切回实时
+      var samples = d.samples || [];
+      lastSamples = samples;
+      if (!samples.length) {
+        // 清掉两张图，避免残留上一次的图形造成误解
+        ctx.clearRect(0, 0, W, H);
+        ctx2.clearRect(0, 0, W2, H2);
+        setStatus(t('noData'));
+        renderSamples();
+        return;
+      }
+      var replayMinFree = samples.reduce(function (m, s) {
+        return m == null || s.free < m ? s.free : m;
+      }, null);
+      renderSamples();
+      var cols = [], i = 0;
+      clearInterval(replayTimer);
+      replayTimer = setInterval(function () {
+        if (i >= samples.length) {
+          clearInterval(replayTimer);
+          replayDone = true;
+          replayCount = samples.length;
+          setStatus(t('replayDone').replace('{n}', samples.length));
+          return;
+        }
+        var s = samples[i];
+        cols.push({ free: s.free });
+        drawCols(cols);
+        drawMinFreeLine(replayMinFree || 0);
+        drawHeapCols(cols, replayMinFree || 0);
+        setStats(s.free, d.minFree || 0, s.maxAlloc, s.stackLeft);
+        i++;
+      }, 300);
+    } catch (e) {
+      setStatus(t('readFail') + e);
+    }
+  }
+
+  function stopAll() {
+    if (timer) clearInterval(timer);
+    timer = null;
+    if (replayTimer) clearInterval(replayTimer);
+    replayTimer = null;
+  }
+
+  document.getElementById('btnLive').onclick = startLive;
+  document.getElementById('btnReplay').onclick = startReplay;
+  var settingsEl = document.getElementById('settings');
+  function openSettings() {
+    settingsEl.classList.remove('hidden');
+    document.getElementById('setLang').value = lang;
+  }
+  document.getElementById('settingsBtn').onclick = openSettings;
+  document.getElementById('setClose').onclick = function () { settingsEl.classList.add('hidden'); };
+  settingsEl.onclick = function (e) { if (e.target === settingsEl) settingsEl.classList.add('hidden'); };
+  document.getElementById('setLang').onchange = function (e) {
+    lang = e.target.value === 'en' ? 'en' : 'zh';
+    localStorage.setItem(LANG_KEY, lang);
+    applyI18n();
+  };
+  applyI18n();
+  startLive();
+})();
+</script>
+</body>
+</html>

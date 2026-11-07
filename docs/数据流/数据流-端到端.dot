@@ -1,0 +1,84 @@
+digraph chat_dataflow {
+  graph [rankdir=TB, fontname="Source Han Sans SC", fontsize=15, nodesep=0.30, ranksep=0.38,
+         labelloc="t", label="ESP32 局域网聊天：一次提问的端到端数据流（当前实现）",
+         compound=true, newrank=true,
+         bgcolor="#ffffff"];
+  node  [fontname="Source Han Sans SC", fontsize=11, shape=box, style="rounded,filled",
+         fillcolor="#ffffff", color="#8a8a8a", penwidth=1.0, margin="0.12,0.06"];
+  edge  [fontname="Source Han Sans SC", fontsize=9, color="#5a5a5a", arrowsize=0.7];
+
+  subgraph cluster_browser {
+    label="① 浏览器（页面与 marked.min.js 来自板子 LittleFS）";
+    fontsize=13; style="rounded,dashed"; color="#7a9cc6"; penwidth=1.2;
+
+    b_input  [label="用户输入 #q → 回车 / 发送", fillcolor="#fff4d6"];
+    b_hist   [label="pairRounds() 配对成轮次\n从最近往前取，累计 ≤ history_budget 字符"];
+    b_sum    [label="有被丢弃的轮次？", shape=diamond, fillcolor="#f2f2f2", height=0.7];
+    b_sumapi [label="POST /api/summarize\n{text: 已有摘要+丢弃轮次}\n→ 得到新摘要（缓存在会话里）", fillcolor="#e8f0fb"];
+    b_payload[label="组装 payload\n{message, history[]}"];
+    b_gzip   [label="CompressionStream('gzip')\n→ Blob，文件名 payload.json.gz\n（不支持则回退 payload.json）", fillcolor="#e9f7ea"];
+    b_fetch  [label="fetch POST /api/chat\nmultipart/form-data，单文件字段 payload", fillcolor="#fff4d6"];
+    b_read   [label="resp.body.getReader()\n按 \\n 切行 → JSON.parse"];
+    b_render [label="每行 delta 直接 textContent 追加\n结束时 marked.js 渲染 + sanitize\n会话/摘要写入 localStorage", fillcolor="#e9f7ea"];
+  }
+
+  subgraph cluster_board {
+    label="② ESP32-D0WD-V3（192.168.1.50，WebServer 单线程 loopTask）";
+    fontsize=13; style="rounded,dashed"; color="#c68a7a"; penwidth=1.2;
+
+    p_form   [label="WebServer::_parseForm\n文本字段 → _currentArgs（会多一份副本）\n带 filename 的字段 → upload 回调", fillcolor="#fdeee9"];
+    p_start  [label="handleUpload: FILE_START\nreleasePlain() 释放上一轮\n预算 g_uploadCap = payloadCap()\n= min(200KB, 最大连续块 − 24KB)"];
+    p_write  [label="FILE_WRITE\nwant = 已有长度 + 本块\n先判 want > cap 再 concat", fillcolor="#f2f2f2"];
+    p_end    [label="FILE_END\ngzipParse(): 跳头、读尾部 ISIZE"];
+    p_cap    [label="origLen ≤ payloadCap() ?", shape=diamond, fillcolor="#f2f2f2", height=0.7, width=2.0];
+    p_413    [label="413\n{\"error\":\"payload too large\",\n \"code\":\"payload_too_large\"}", fillcolor="#ffe3e3"];
+    p_infl   [label="gzipInflate()\nmalloc 输出缓冲 + 堆上 tinfl_decompressor\n成功后立刻 free 掉 gzip String", fillcolor="#e9f7ea"];
+    p_parse  [label="handleChat\ndeserializeJson(doc, 缓冲, 长度)\n零拷贝：字符串直接指向该缓冲", fillcolor="#e9f7ea"];
+    p_disp   [label="llmStream()\n按 NVS 里的 backend 分发\n(0=Ollama / 1=DeepSeek)"];
+    p_merge  [label="onDelta 累加，≥64 字符才发\nchunkWrite {\"delta\":\"…\"}\\n\n合并小片段 + Cache-Control: no-store", fillcolor="#f2f2f2"];
+    p_done   [label="chunkWrite {\"done\":true}\nchunkResponseEnd()\nreleasePlain() 释放明文缓冲", fillcolor="#e9f7ea"];
+    p_sumapi [label="handleSummarize\n截断到 SUMMARY_INPUT_MAX\nllmStream(非流式转发) 后回 {\"summary\"}", fillcolor="#e8f0fb"];
+  }
+
+  subgraph cluster_up {
+    label="③ 上游模型服务";
+    fontsize=13; style="rounded,dashed"; color="#8aa87a"; penwidth=1.2;
+
+    u_ollama [label="Ollama 192.168.1.10:11434\nPOST /api/chat\nTransfer-Encoding: chunked\n{\"model\",\"stream\":true,\"messages\":[ 逐条序列化 ]}", fillcolor="#f2f7ee"];
+    u_ds     [label="DeepSeek api.deepseek.com\nPOST /v1/chat/completions\nchunked + Authorization: Bearer\n同一套逐条序列化", fillcolor="#f2f7ee"];
+    u_lines  [label="streamLines()（自写原始 socket 循环）\n自己解 chunked 长度行 → 按 \\n 切行\nOllama: message.content\nDeepSeek: SSE data: → Filter 只取 delta.content", fillcolor="#e9f7ea"];
+  }
+
+  // ---- 主链路 ----
+  b_input  -> b_hist;
+  b_hist   -> b_sum;
+  b_sum    -> b_sumapi [label=" 是"];
+  b_sumapi -> b_payload;
+  b_sum    -> b_payload [label=" 否"];
+  b_payload-> b_gzip;
+  b_gzip   -> b_fetch;
+  b_fetch  -> p_form;
+  p_form   -> p_start;
+  p_start  -> p_write;
+  p_write  -> p_end   [label=" gzip 上传"];
+  p_end    -> p_cap;
+  p_cap    -> p_413   [label=" 否"];
+  p_cap    -> p_infl  [label=" 是"];
+  p_infl   -> p_parse;
+  p_parse  -> p_disp;
+  p_disp   -> u_ollama [label=" backend=0"];
+  p_disp   -> u_ds     [label=" backend=1"];
+  u_ollama -> u_lines  [dir=both];
+  u_ds     -> u_lines  [dir=both];
+  u_lines  -> p_merge;
+  p_merge  -> p_done;
+  p_done   -> b_read;
+  b_read   -> b_render;
+
+  // ---- 摘要支路 ----
+  b_sumapi -> p_sumapi [style=dashed, label=" 走同一条流式上游"];
+  p_sumapi -> p_disp   [style=dashed, dir=back, label=" 复用"];
+
+  // ---- 错误回执 ----
+  p_413 -> b_read [style=dashed, label=" 前端显示中文提示"];
+}

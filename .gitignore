@@ -1,0 +1,8 @@
+secrets.h
+*.bin
+build/
+
+# 本地工具产生的缓存 / 依赖
+__pycache__/
+*.pyc
+node_modules/

@@ -1,0 +1,12 @@
+{
+  "name": "llm-client-web-test",
+  "private": true,
+  "version": "1.0.0",
+  "description": "llm-client 前端 headless 回归测试（主聊天页 + 内存监控页）",
+  "scripts": {
+    "test": "node runner.js"
+  },
+  "dependencies": {
+    "puppeteer-core": "^24.0.0"
+  }
+}

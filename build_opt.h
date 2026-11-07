@@ -1,0 +1,4 @@
+-fno-exceptions
+-fno-unwind-tables
+-fno-asynchronous-unwind-tables
+-fno-threadsafe-statics

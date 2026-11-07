@@ -1,0 +1,275 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="2110" viewBox="0 0 1300 2110" font-family="'Source Han Sans SC','Noto Sans CJK SC',sans-serif">
+<rect width="1300" height="2110" fill="#ffffff"/>
+<defs><pattern id="unused" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="7" height="7" fill="#f6f5f0"/><line x1="0" y1="0" x2="0" y2="7" stroke="#ddd8ca" stroke-width="2"/></pattern></defs>
+<text x="650.0" y="42.0" font-size="23" fill="#141414" text-anchor="middle" font-weight="bold">ESP32-D0WD-V3 内存与存储占用</text>
+<text x="650.0" y="66.0" font-size="13" fill="#555" text-anchor="middle" font-weight="normal">llm-client @ 9b01ade　link map / 固件镜像 / 分区表 ＋ 2026-11-01 memprobe 实测</text>
+<rect x="96.0" y="120.0" width="168.0" height="780.0" fill="#fcfcfa" stroke="#2b2b2b" stroke-width="1.5" rx="0"/>
+<text x="180.0" y="108.0" font-size="16" fill="#141414" text-anchor="middle" font-weight="bold">Flash 4 MB</text>
+<rect x="96.0" y="899.2" width="168.0" height="0.8" fill="#ffffff" stroke="#ccc" stroke-width="0.8" rx="0"/>
+<rect x="96.0" y="893.9" width="168.0" height="5.3" fill="#efe4cb" stroke="#8a7a52" stroke-width="0.8" rx="0"/>
+<rect x="96.0" y="893.1" width="168.0" height="0.8" fill="#8fa8c8" stroke="#5a7a9a" stroke-width="0.8" rx="0"/>
+<rect x="96.0" y="889.3" width="168.0" height="3.8" fill="#c4dcb4" stroke="#5a7a52" stroke-width="0.8" rx="0"/>
+<rect x="96.0" y="887.8" width="168.0" height="1.5" fill="#dcdcdc" stroke="#999" stroke-width="0.8" rx="0"/>
+<line x1="266.0" y1="887.8" x2="273.0" y2="887.8" stroke="#8a6a30" stroke-width="1" stroke-dasharray="3,2"/>
+<line x1="266.0" y1="900.0" x2="273.0" y2="900.0" stroke="#8a6a30" stroke-width="1" stroke-dasharray="3,2"/>
+<line x1="273.0" y1="887.8" x2="273.0" y2="900.0" stroke="#8a6a30" stroke-width="1" stroke-dasharray="3,2"/>
+<text x="276.0" y="883.9" font-size="10.5" fill="#7a5a20" text-anchor="start" font-weight="normal">开头 16 KB</text>
+<text x="276.0" y="897.9" font-size="10.5" fill="#7a5a20" text-anchor="start" font-weight="normal">见下表 1–5</text>
+<rect x="96.0" y="644.1" width="168.0" height="243.8" fill="#faf6ec" stroke="#8a7a52" stroke-width="1.4" rx="0"/>
+<text x="180.0" y="666.1" font-size="12.5" fill="#141414" text-anchor="middle" font-weight="bold">app0 固件</text>
+<text x="180.0" y="683.1" font-size="11.5" fill="#141414" text-anchor="middle" font-weight="normal">1,137,696 B</text>
+<text x="180.0" y="699.1" font-size="10.5" fill="#141414" text-anchor="middle" font-weight="normal">占 1280 KB 的 86.8%</text>
+<rect x="100.0" y="865.4" width="160.0" height="22.4" fill="#6fbf9a" stroke="none" stroke-width="0" rx="0"/>
+<rect x="100.0" y="862.0" width="160.0" height="3.4" fill="#e39b4e" stroke="none" stroke-width="0" rx="0"/>
+<rect x="100.0" y="861.4" width="160.0" height="0.6" fill="#d9c33f" stroke="none" stroke-width="0" rx="0"/>
+<rect x="100.0" y="746.9" width="160.0" height="114.6" fill="#6b9bd4" stroke="none" stroke-width="0" rx="0"/>
+<rect x="100.0" y="735.2" width="160.0" height="11.6" fill="#a98cd8" stroke="none" stroke-width="0" rx="0"/>
+<rect x="100.0" y="735.2" width="160.0" height="0.6" fill="#d96d6d" stroke="none" stroke-width="0" rx="0"/>
+<rect x="100.0" y="712.0" width="160.0" height="23.2" fill="url(#unused)" stroke="#c8c2b0" stroke-width="0.8" rx="0"/>
+<text x="180.0" y="727.6" font-size="10.5" fill="#4a4a4a" text-anchor="middle" font-weight="normal">未用 173,024 B</text>
+<rect x="96.0" y="400.3" width="168.0" height="243.8" fill="#fbfbfb" stroke="#ccc" stroke-width="1.0" rx="0"/>
+<text x="180.0" y="526.2" font-size="11.5" fill="#4a4a4a" text-anchor="middle" font-weight="normal">app1 空槽</text>
+<rect x="96.0" y="132.2" width="168.0" height="268.1" fill="#d9e8c8" stroke="#5a7a52" stroke-width="1.2" rx="0"/>
+<text x="180.0" y="188.2" font-size="12.5" fill="#141414" text-anchor="middle" font-weight="bold">LittleFS</text>
+<text x="180.0" y="206.2" font-size="11.5" fill="#141414" text-anchor="middle" font-weight="normal">已用 77,320 B</text>
+<text x="180.0" y="223.2" font-size="10.5" fill="#141414" text-anchor="middle" font-weight="normal">占 1408 KB 的 5.4%</text>
+<rect x="96.0" y="120.0" width="168.0" height="12.2" fill="#e8c6c6" stroke="#a05a5a" stroke-width="1.0" rx="0"/>
+<line x1="90.0" y1="900.0" x2="96.0" y2="900.0" stroke="#2b2b2b" stroke-width="1"/>
+<text x="87.0" y="904.0" font-size="10.5" fill="#444" text-anchor="end" font-weight="normal">0x000000</text>
+<line x1="90.0" y1="705.0" x2="96.0" y2="705.0" stroke="#2b2b2b" stroke-width="1"/>
+<text x="87.0" y="709.0" font-size="10.5" fill="#444" text-anchor="end" font-weight="normal">0x100000</text>
+<line x1="90.0" y1="510.0" x2="96.0" y2="510.0" stroke="#2b2b2b" stroke-width="1"/>
+<text x="87.0" y="514.0" font-size="10.5" fill="#444" text-anchor="end" font-weight="normal">0x200000</text>
+<line x1="90.0" y1="315.0" x2="96.0" y2="315.0" stroke="#2b2b2b" stroke-width="1"/>
+<text x="87.0" y="319.0" font-size="10.5" fill="#444" text-anchor="end" font-weight="normal">0x300000</text>
+<line x1="90.0" y1="120.0" x2="96.0" y2="120.0" stroke="#2b2b2b" stroke-width="1"/>
+<text x="87.0" y="124.0" font-size="10.5" fill="#444" text-anchor="end" font-weight="normal">0x400000</text>
+<rect x="450.0" y="120.0" width="168.0" height="780.0" fill="#fcfcfa" stroke="#2b2b2b" stroke-width="1.5" rx="0"/>
+<text x="534.0" y="108.0" font-size="16" fill="#141414" text-anchor="middle" font-weight="bold">DRAM 320 KB</text>
+<rect x="450.0" y="750.6" width="168.0" height="149.4" fill="#b9b3a5" stroke="#8a8478" stroke-width="1.0" rx="0"/>
+<line x1="618.0" y1="825.3" x2="632.0" y2="825.3" stroke="#8a8478" stroke-width="0.8"/>
+<text x="636.0" y="813.3" font-size="11.5" fill="#141414" text-anchor="start" font-weight="bold">ROM 数据+BT 保留</text>
+<text x="636.0" y="828.3" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">64,348 B</text>
+<rect x="450.0" y="691.5" width="168.0" height="59.0" fill="#8fa8c8" stroke="#5a7a9a" stroke-width="1.0" rx="0"/>
+<line x1="618.0" y1="721.1" x2="632.0" y2="721.1" stroke="#5a7a9a" stroke-width="0.8"/>
+<text x="636.0" y="716.1" font-size="11.5" fill="#141414" text-anchor="start" font-weight="bold">.data 25,413 B</text>
+<text x="636.0" y="731.1" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">已初始化全局</text>
+<rect x="450.0" y="495.7" width="168.0" height="195.9" fill="#e6ecf3" stroke="#7e93ab" stroke-width="1.0" rx="0"/>
+<rect x="450.0" y="576.9" width="168.0" height="114.1" fill="#1f3d63" stroke="#12293f" stroke-width="1.1" rx="0"/>
+<text x="534.0" y="629.0" font-size="12.5" fill="#ffffff" text-anchor="middle" font-weight="bold">g_work 49,153 B</text>
+<text x="534.0" y="647.0" font-size="10.5" fill="#cfe0f2" text-anchor="middle" font-weight="normal">48 KB 工作区</text>
+<rect x="450.0" y="551.4" width="168.0" height="25.5" fill="#3d6491" stroke="#26507c" stroke-width="1.0" rx="0"/>
+<text x="534.0" y="569.1" font-size="10.5" fill="#ffffff" text-anchor="middle" font-weight="normal">g_inflater 10,992 B</text>
+<line x1="626.0" y1="495.7" x2="626.0" y2="691.5" stroke="#7e93ab" stroke-width="1.2"/>
+<line x1="624.0" y1="495.7" x2="628.0" y2="495.7" stroke="#7e93ab" stroke-width="1.2"/>
+<line x1="624.0" y1="691.5" x2="628.0" y2="691.5" stroke="#7e93ab" stroke-width="1.2"/>
+<text x="636.0" y="674.0" font-size="11.5" fill="#2a3a4a" text-anchor="start" font-weight="bold">.bss 84,336 B</text>
+<text x="636.0" y="690.0" font-size="10.5" fill="#2a3a4a" text-anchor="start" font-weight="normal">未初始化全局</text>
+<rect x="450.0" y="495.7" width="168.0" height="55.7" fill="#7e93ab" stroke="#5a6e86" stroke-width="1.0" rx="0"/>
+<text x="534.0" y="520.5" font-size="11.5" fill="#0e1c28" text-anchor="middle" font-weight="bold">库 / 协议栈</text>
+<text x="534.0" y="537.5" font-size="10.5" fill="#16283a" text-anchor="middle" font-weight="normal">23,988 B</text>
+<line x1="618.0" y1="523.5" x2="622.0" y2="523.5" stroke="#5a7e9e" stroke-width="0.8"/>
+<text x="636.0" y="506.5" font-size="11.5" fill="#24445f" text-anchor="start" font-weight="bold">库 / 协议栈 .bss</text>
+<text x="636.0" y="521.5" font-size="10.5" fill="#24445f" text-anchor="start" font-weight="normal">WiFi+PHY  11,465</text>
+<text x="636.0" y="534.5" font-size="10.5" fill="#24445f" text-anchor="start" font-weight="normal">lwIP       4,701</text>
+<text x="636.0" y="547.5" font-size="10.5" fill="#24445f" text-anchor="start" font-weight="normal">其余 7,029 · 填充 797</text>
+<rect x="450.0" y="120.0" width="168.0" height="375.7" fill="#f9eccd" stroke="#a08030" stroke-width="1.2" rx="0"/>
+<text x="534.0" y="144.0" font-size="12.5" fill="#141414" text-anchor="middle" font-weight="bold">堆 Heap</text>
+<text x="534.0" y="162.0" font-size="11.5" fill="#141414" text-anchor="middle" font-weight="normal">161,768 B</text>
+<text x="534.0" y="179.0" font-size="10.5" fill="#141414" text-anchor="middle" font-weight="normal">（158 KB）</text>
+<text x="534.0" y="198.0" font-size="10.5" fill="#141414" text-anchor="middle" font-weight="normal">空闲 155,392 B（96.0%）</text>
+<rect x="450.0" y="480.9" width="168.0" height="14.8" fill="#d9a441" stroke="#8a6a20" stroke-width="0.8" rx="0"/>
+<line x1="618.0" y1="488.3" x2="614.0" y2="488.3" stroke="#8a6a20" stroke-width="0.8"/>
+<text x="636.0" y="480.3" font-size="10.5" fill="#6a4a10" text-anchor="start" font-weight="bold">已用 6,376 B</text>
+<text x="636.0" y="494.3" font-size="10.5" fill="#6a4a10" text-anchor="start" font-weight="normal">约 4%（含元数据）</text>
+<line x1="618.0" y1="345.0" x2="632.0" y2="345.0" stroke="#8a2a2a" stroke-width="0.8" stroke-dasharray="3,2"/>
+<text x="636.0" y="341.0" font-size="11.5" fill="#8a2a2a" text-anchor="start" font-weight="bold">最大连续块（实测）</text>
+<text x="636.0" y="356.0" font-size="10.5" fill="#8a2a2a" text-anchor="start" font-weight="normal">空闲 110,580 B</text>
+<text x="636.0" y="371.0" font-size="10.5" fill="#8a2a2a" text-anchor="start" font-weight="normal">跑过 TLS 后 63,476 B</text>
+<text x="636.0" y="386.0" font-size="10.5" fill="#8a2a2a" text-anchor="start" font-weight="normal">最坏 45,044 B</text>
+<line x1="444.0" y1="900.0" x2="450.0" y2="900.0" stroke="#2b2b2b" stroke-width="1"/>
+<text x="441.0" y="904.0" font-size="10.5" fill="#444" text-anchor="end" font-weight="normal">0x3FFAE000</text>
+<line x1="444.0" y1="728.8" x2="450.0" y2="728.8" stroke="#2b2b2b" stroke-width="1"/>
+<text x="441.0" y="732.8" font-size="10.5" fill="#444" text-anchor="end" font-weight="normal">0x3FFC0000</text>
+<line x1="444.0" y1="576.6" x2="450.0" y2="576.6" stroke="#2b2b2b" stroke-width="1"/>
+<text x="441.0" y="580.6" font-size="10.5" fill="#444" text-anchor="end" font-weight="normal">0x3FFD0000</text>
+<line x1="444.0" y1="120.0" x2="450.0" y2="120.0" stroke="#2b2b2b" stroke-width="1"/>
+<text x="441.0" y="124.0" font-size="10.5" fill="#444" text-anchor="end" font-weight="normal">0x40000000</text>
+<rect x="810.0" y="120.0" width="168.0" height="780.0" fill="#fcfcfa" stroke="#2b2b2b" stroke-width="1.5" rx="0"/>
+<text x="894.0" y="108.0" font-size="16" fill="#141414" text-anchor="middle" font-weight="bold">IRAM 128 KB</text>
+<rect x="810.0" y="893.9" width="168.0" height="6.1" fill="#aebdd0" stroke="#5a6e86" stroke-width="1.0" rx="0"/>
+<rect x="810.0" y="358.5" width="168.0" height="535.3" fill="#c3d0e0" stroke="#7e93ab" stroke-width="1.0" rx="0"/>
+<text x="894.0" y="618.2" font-size="12.5" fill="#141414" text-anchor="middle" font-weight="bold">.iram0.text</text>
+<text x="894.0" y="635.2" font-size="11.5" fill="#141414" text-anchor="middle" font-weight="normal">89,959 B</text>
+<text x="894.0" y="652.2" font-size="10.5" fill="#141414" text-anchor="middle" font-weight="normal">中断/调度/TLSF</text>
+<line x1="978.0" y1="900.0" x2="990.0" y2="884.0" stroke="#5a6e86" stroke-width="0.8"/>
+<text x="993.0" y="880.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="bold">向量表</text>
+<text x="993.0" y="894.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">1,028 B</text>
+<rect x="810.0" y="120.0" width="168.0" height="238.5" fill="#fbfbfb" stroke="#ccc" stroke-width="1.0" rx="0" stroke-dasharray="4,3"/>
+<text x="894.0" y="235.3" font-size="11.5" fill="#4a4a4a" text-anchor="middle" font-weight="normal">空闲</text>
+<text x="894.0" y="252.3" font-size="11.5" fill="#4a4a4a" text-anchor="middle" font-weight="normal">40,084 B</text>
+<line x1="804.0" y1="900.0" x2="810.0" y2="900.0" stroke="#2b2b2b" stroke-width="1"/>
+<text x="801.0" y="904.0" font-size="10.5" fill="#444" text-anchor="end" font-weight="normal">0x40080000</text>
+<line x1="804.0" y1="120.0" x2="810.0" y2="120.0" stroke="#2b2b2b" stroke-width="1"/>
+<text x="801.0" y="124.0" font-size="10.5" fill="#444" text-anchor="end" font-weight="normal">0x400A0000</text>
+<rect x="1060.0" y="150.0" width="210.0" height="300.0" fill="#fffdf6" stroke="#a08050" stroke-width="1.2" rx="6"/>
+<text x="1165.0" y="172.0" font-size="12.5" fill="#141414" text-anchor="middle" font-weight="bold">loopTask 栈 8 KB</text>
+<rect x="1086.0" y="190.0" width="44.0" height="218.0" fill="#f7f0e2" stroke="#a08050" stroke-width="1.0" rx="0"/>
+<rect x="1086.0" y="291.8" width="44.0" height="116.2" fill="#c9793a" stroke="#555" stroke-width="1.0" rx="0"/>
+<text x="1108.0" y="354.9" font-size="10.5" fill="#3a1200" text-anchor="middle" font-weight="bold">4,368</text>
+<text x="1108.0" y="216.0" font-size="10.5" fill="#4a4a4a" text-anchor="middle" font-weight="normal">未用</text>
+<line x1="1081.0" y1="291.8" x2="1086.0" y2="291.8" stroke="#8a3a10" stroke-width="1.4"/>
+<text x="1079.0" y="295.8" font-size="10.5" fill="#8a3a10" text-anchor="end" font-weight="normal">SP</text>
+<text x="1144.0" y="206.0" font-size="11.5" fill="#8a3a10" text-anchor="start" font-weight="bold">已用 4,368 B</text>
+<text x="1144.0" y="224.0" font-size="11.5" fill="#1f5a1f" text-anchor="start" font-weight="normal">余量 3,824 B（46.7%）</text>
+<text x="1144.0" y="242.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">空闲时只占 2,900 B</text>
+<line x1="1144.0" y1="258.0" x2="1256.0" y2="258.0" stroke="#e0e0e0" stroke-width="1"/>
+<text x="1144.0" y="280.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">栈不在 .bss</text>
+<text x="1144.0" y="297.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">任务创建时 malloc</text>
+<text x="1144.0" y="322.0" font-size="10.5" fill="#a03030" text-anchor="start" font-weight="normal">溢出会踩坏</text>
+<text x="1144.0" y="339.0" font-size="10.5" fill="#a03030" text-anchor="start" font-weight="normal">相邻堆块</text>
+<text x="1144.0" y="364.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">峰值取自</text>
+<text x="1144.0" y="381.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">TaskHighWaterMark</text>
+<text x="1144.0" y="398.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">（since-boot）</text>
+<rect x="60.0" y="940.0" width="560.0" height="210.0" fill="#fffef9" stroke="#b0a080" stroke-width="1.2" rx="6"/>
+<text x="76.0" y="966.0" font-size="12.5" fill="#141414" text-anchor="start" font-weight="bold">Flash 开头 5 个小分区</text>
+<text x="76.0" y="996.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="normal">1</text>
+<text x="92.0" y="996.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">bootloader</text>
+<text x="430.0" y="996.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">24,992 B</text>
+<text x="446.0" y="996.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">0x001000</text>
+<text x="76.0" y="1024.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="normal">2</text>
+<text x="92.0" y="1024.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">保留 / 引导参数</text>
+<text x="430.0" y="1024.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">4,096 B</text>
+<text x="446.0" y="1024.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">0x000000</text>
+<text x="76.0" y="1052.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="normal">3</text>
+<text x="92.0" y="1052.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">分区表</text>
+<text x="430.0" y="1052.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">224 B</text>
+<text x="446.0" y="1052.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">0x008000</text>
+<text x="76.0" y="1080.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="normal">4</text>
+<text x="92.0" y="1080.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">nvs（凭据/配置）</text>
+<text x="430.0" y="1080.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">20 KB</text>
+<text x="446.0" y="1080.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">0x009000</text>
+<text x="76.0" y="1108.0" font-size="10.5" fill="#333" text-anchor="start" font-weight="normal">5</text>
+<text x="92.0" y="1108.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">otadata</text>
+<text x="430.0" y="1108.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">8 KB</text>
+<text x="446.0" y="1108.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">0x00E000</text>
+<rect x="660.0" y="940.0" width="560.0" height="210.0" fill="#fffef9" stroke="#b0a080" stroke-width="1.2" rx="6"/>
+<text x="676.0" y="966.0" font-size="12.5" fill="#141414" text-anchor="start" font-weight="bold">固件镜像 6 段</text>
+<rect x="678.0" y="983.0" width="11.0" height="11.0" fill="#d96d6d" stroke="#555" stroke-width="0.7" rx="0"/>
+<text x="696.0" y="992.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">RTC_DATA</text>
+<text x="1058.0" y="992.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">32 B</text>
+<text x="1206.0" y="992.0" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">→ 0x50000200</text>
+<rect x="678.0" y="1009.0" width="11.0" height="11.0" fill="#a98cd8" stroke="#555" stroke-width="0.7" rx="0"/>
+<text x="696.0" y="1018.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">IRAM 段②</text>
+<text x="1058.0" y="1018.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">86,720 B</text>
+<text x="1206.0" y="1018.0" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">→ 0x400810AC</text>
+<rect x="678.0" y="1035.0" width="11.0" height="11.0" fill="#6b9bd4" stroke="#555" stroke-width="0.7" rx="0"/>
+<text x="696.0" y="1044.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">IROM .text</text>
+<text x="1058.0" y="1044.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">854,248 B</text>
+<text x="1206.0" y="1044.0" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">→ 0x400D0020</text>
+<rect x="678.0" y="1061.0" width="11.0" height="11.0" fill="#d9c33f" stroke="#555" stroke-width="0.7" rx="0"/>
+<text x="696.0" y="1070.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">IRAM 段①</text>
+<text x="1058.0" y="1070.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">4,268 B</text>
+<text x="1206.0" y="1070.0" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">→ 0x40080000</text>
+<rect x="678.0" y="1087.0" width="11.0" height="11.0" fill="#e39b4e" stroke="#555" stroke-width="0.7" rx="0"/>
+<text x="696.0" y="1096.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">DRAM .data</text>
+<text x="1058.0" y="1096.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">25,416 B</text>
+<text x="1206.0" y="1096.0" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">→ 0x3FFBDB60</text>
+<rect x="678.0" y="1113.0" width="11.0" height="11.0" fill="#6fbf9a" stroke="#555" stroke-width="0.7" rx="0"/>
+<text x="696.0" y="1122.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">DROM .rodata</text>
+<text x="1058.0" y="1122.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">166,900 B</text>
+<text x="1206.0" y="1122.0" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">→ 0x3F400020</text>
+<rect x="60.0" y="1180.0" width="383.0" height="168.0" fill="#e8ecf2" stroke="#aaa" stroke-width="1.0" rx="8"/>
+<text x="74.0" y="1206.0" font-size="12.5" fill="#141414" text-anchor="start" font-weight="bold">① 静态占用</text>
+<text x="74.0" y="1232.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">.data　25,413 B</text>
+<text x="74.0" y="1257.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">.bss　84,336 B</text>
+<text x="74.0" y="1282.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">合计 109,749 B</text>
+<text x="429.0" y="1282.0" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">占 33%</text>
+<rect x="463.0" y="1180.0" width="383.0" height="168.0" fill="#fdf3dd" stroke="#aaa" stroke-width="1.0" rx="8"/>
+<text x="477.0" y="1206.0" font-size="12.5" fill="#141414" text-anchor="start" font-weight="bold">② 剩下给堆</text>
+<text x="477.0" y="1232.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">DRAM 335,872（328 KB）</text>
+<text x="477.0" y="1257.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">− 保留 64,348</text>
+<text x="477.0" y="1282.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">− 静态 109,749 + 对齐 7</text>
+<text x="477.0" y="1307.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">= 堆 161,768 B</text>
+<text x="832.0" y="1307.0" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">158 KB</text>
+<text x="477.0" y="1332.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">实测空闲 155,392 B</text>
+<text x="832.0" y="1332.0" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">差 6,376</text>
+<rect x="866.0" y="1180.0" width="383.0" height="168.0" fill="#fbe4e4" stroke="#aaa" stroke-width="1.0" rx="8"/>
+<text x="880.0" y="1206.0" font-size="12.5" fill="#141414" text-anchor="start" font-weight="bold">③ 最大连续块</text>
+<text x="880.0" y="1232.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">空闲 110,580 B</text>
+<text x="880.0" y="1257.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">TLS 后 63,476 B</text>
+<text x="880.0" y="1282.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">最坏 45,044 B</text>
+<text x="1235.0" y="1282.0" font-size="10.5" fill="#555" text-anchor="end" font-weight="normal">TLS 发送期</text>
+<rect x="60.0" y="1380.0" width="650.0" height="250.0" fill="#f3f7ee" stroke="#8aa87a" stroke-width="1.2" rx="8"/>
+<text x="74.0" y="1406.0" font-size="12.5" fill="#141414" text-anchor="start" font-weight="bold">④ 一次请求实测（memprobe 逐阶段埋点）</text>
+<text x="74.0" y="1426.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">串行执行，单轮从堆里拿这些，收尾全部归还</text>
+<text x="74.0" y="1458.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">收请求 + 解析（明文落 48 KB 静态区）</text>
+<text x="694.0" y="1458.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">0 B</text>
+<text x="74.0" y="1484.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">gzip 上传（压缩体 String）</text>
+<text x="694.0" y="1484.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">2,180 B</text>
+<text x="74.0" y="1510.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">上游请求期（Ollama）</text>
+<text x="694.0" y="1510.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">2,900 B</text>
+<text x="74.0" y="1536.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">收尾（chunk 回写 + 序列化）</text>
+<text x="694.0" y="1536.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">6–15 KB</text>
+<text x="74.0" y="1562.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">单轮峰值：Ollama / gzip+历史</text>
+<text x="694.0" y="1562.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">11,848 / 14,712 B</text>
+<line x1="74.0" y1="1578.0" x2="694.0" y2="1578.0" stroke="#c8d8bc" stroke-width="1"/>
+<text x="74.0" y="1596.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="bold">峰值都小于静态工作区，上限由此定死</text>
+<text x="74.0" y="1614.0" font-size="10.5" fill="#3f6a3f" text-anchor="start" font-weight="normal">工作区 48 KB 在 .bss，不随请求涨落、不产生碎片</text>
+<rect x="730.0" y="1380.0" width="510.0" height="250.0" fill="#fbe4e4" stroke="#c08080" stroke-width="1.2" rx="8"/>
+<text x="744.0" y="1406.0" font-size="12.5" fill="#141414" text-anchor="start" font-weight="bold">⑤ 仅 DeepSeek：TLS 叠加（实测）</text>
+<text x="744.0" y="1426.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">openai_client.cpp 用 WiFiClientSecure + setInsecure()</text>
+<text x="744.0" y="1458.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">握手一次性跳变（tls_up）</text>
+<text x="1224.0" y="1458.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">+46,436 B</text>
+<text x="744.0" y="1484.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">发送请求体瞬间峰值</text>
+<text x="1224.0" y="1484.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">66,004 B</text>
+<text x="744.0" y="1510.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">峰值时最大连续块</text>
+<text x="1224.0" y="1510.0" font-size="11.5" fill="#141414" text-anchor="end" font-weight="normal">45,044 B</text>
+<line x1="744.0" y1="1536.0" x2="1224.0" y2="1536.0" stroke="#d8b8b8" stroke-width="1"/>
+<text x="744.0" y="1556.0" font-size="11.5" fill="#8a2a2a" text-anchor="start" font-weight="bold">峰值 66,004 B</text>
+<text x="744.0" y="1576.0" font-size="10.5" fill="#8a2a2a" text-anchor="start" font-weight="normal">TLS 后 blk 110,580 → 63,476，不复原</text>
+<text x="744.0" y="1594.0" font-size="10.5" fill="#8a2a2a" text-anchor="start" font-weight="normal">连发 4 次峰值稳定、不累积</text>
+<text x="744.0" y="1610.0" font-size="10.5" fill="#8a2a2a" text-anchor="start" font-weight="normal">详见 docs/内存/内存实测-探针-2026-11-01.md</text>
+<rect x="60.0" y="1660.0" width="1180.0" height="158.0" fill="#fffef9" stroke="#b0a080" stroke-width="1.2" rx="8"/>
+<text x="76.0" y="1686.0" font-size="12.5" fill="#141414" text-anchor="start" font-weight="bold">⑥ 容易误算为占 DRAM、实际不占的项</text>
+<text x="76.0" y="1716.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">明文 JSON、解压结果</text>
+<text x="330.0" y="1716.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">在 g_work 静态工作区，不走堆</text>
+<text x="76.0" y="1741.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">完整回答文本</text>
+<text x="330.0" y="1741.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">只在浏览器，板上只留 2 KB 前缀</text>
+<text x="76.0" y="1766.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">网页 / marked.js</text>
+<text x="330.0" y="1766.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">Flash 里 LittleFS（1,408 KB 分区）</text>
+<text x="76.0" y="1791.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="normal">coredump</text>
+<text x="330.0" y="1791.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">Flash 0x3F0000（64 KB，崩溃时写）</text>
+<text x="60.0" y="1848.0" font-size="11.5" fill="#141414" text-anchor="start" font-weight="bold">图例</text>
+<rect x="60.0" y="1863.0" width="15.0" height="12.0" fill="#8fa8c8" stroke="#666" stroke-width="0.7" rx="0"/>
+<text x="81.0" y="1874.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">已初始化 .data</text>
+<rect x="360.0" y="1863.0" width="15.0" height="12.0" fill="#1f3d63" stroke="#666" stroke-width="0.7" rx="0"/>
+<text x="381.0" y="1874.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">本项目工作区</text>
+<rect x="660.0" y="1863.0" width="15.0" height="12.0" fill="#3d6491" stroke="#666" stroke-width="0.7" rx="0"/>
+<text x="681.0" y="1874.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">解压器</text>
+<rect x="960.0" y="1863.0" width="15.0" height="12.0" fill="#7e93ab" stroke="#666" stroke-width="0.7" rx="0"/>
+<text x="981.0" y="1874.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">库/协议栈 .bss</text>
+<rect x="60.0" y="1885.0" width="15.0" height="12.0" fill="#f9eccd" stroke="#666" stroke-width="0.7" rx="0"/>
+<text x="81.0" y="1896.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">堆</text>
+<rect x="360.0" y="1885.0" width="15.0" height="12.0" fill="#d9a441" stroke="#666" stroke-width="0.7" rx="0"/>
+<text x="381.0" y="1896.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">堆已用块</text>
+<rect x="660.0" y="1885.0" width="15.0" height="12.0" fill="#c9793a" stroke="#666" stroke-width="0.7" rx="0"/>
+<text x="681.0" y="1896.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">任务栈峰值</text>
+<rect x="960.0" y="1885.0" width="15.0" height="12.0" fill="#c3d0e0" stroke="#666" stroke-width="0.7" rx="0"/>
+<text x="981.0" y="1896.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">IRAM 代码</text>
+<rect x="60.0" y="1907.0" width="15.0" height="12.0" fill="#efe4cb" stroke="#666" stroke-width="0.7" rx="0"/>
+<text x="81.0" y="1918.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">Flash</text>
+<rect x="360.0" y="1907.0" width="15.0" height="12.0" fill="#d9e8c8" stroke="#666" stroke-width="0.7" rx="0"/>
+<text x="381.0" y="1918.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">LittleFS</text>
+<rect x="660.0" y="1907.0" width="15.0" height="12.0" fill="#b9b3a5" stroke="#666" stroke-width="0.7" rx="0"/>
+<text x="681.0" y="1918.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">ROM/BT</text>
+<rect x="960.0" y="1907.0" width="15.0" height="12.0" fill="#e8c6c6" stroke="#666" stroke-width="0.7" rx="0"/>
+<text x="981.0" y="1918.0" font-size="10.5" fill="#141414" text-anchor="start" font-weight="normal">coredump</text>
+<line x1="60.0" y1="1948.0" x2="1240.0" y2="1948.0" stroke="#ddd" stroke-width="1"/>
+<text x="60.0" y="1970.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">三段地址轴按真实地址跨度等比缩放，块高与字节数成正比。堆内色块位置为示意；</text>
+<text x="60.0" y="1987.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">「空闲 155,392 B」「最大连续块 110,580 / 63,476 / 45,044 B」「栈 4,368 B」为串口实测。</text>
+<text x="60.0" y="2004.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">运行期 ESP.getHeapSize()=262,228 B（DRAM 222,144 ＋ IRAM 40,084）；本图「堆 161,768 B」</text>
+<text x="60.0" y="2021.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">只是 .bss 之后的 DRAM 段，WiFi/BT 保留窗运行期归 heap_caps（已分配 56.9 KB）。</text>
+<text x="60.0" y="2038.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">④⑤ 的数值为 memprobe 实测（docs/内存/内存实测-探针-2026-11-01.md），不再是估算。</text>
+<text x="60.0" y="2055.0" font-size="10.5" fill="#555" text-anchor="start" font-weight="normal">收尾阶段 6–15 KB 峰值的具体分配点尚未定位（chunkWrite 本身不分配）。</text>
+</svg>

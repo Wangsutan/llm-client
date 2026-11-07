@@ -1,0 +1,37 @@
+digraph memory_lifecycle {
+  graph [rankdir=TB, fontname="Source Han Sans SC", fontsize=15, nodesep=0.28, ranksep=0.30,
+         labelloc="t",
+         label="板子侧缓冲生命周期：M = 明文 JSON 的字节数（实测 gzip 后为 M 的 1.5%–6.5%）",
+         bgcolor="#ffffff"];
+  node  [fontname="Source Han Sans SC", fontsize=11, shape=box, style="rounded,filled",
+         fillcolor="#ffffff", color="#8a8a8a", margin="0.14,0.07"];
+  edge  [fontname="Source Han Sans SC", fontsize=10, color="#5a5a5a", arrowsize=0.7];
+
+  idle    [label="空闲基线　heap ≈ 200KB，最大连续块 40–65KB", fillcolor="#f2f2f2"];
+  recv    [label="① 接收上传　持有：gzip 字节 ≈ M/15 ~ M/3（g_uploadBody）", fillcolor="#e8f0fb"];
+  infl    [label="② 解压瞬间（峰值）　gzip + 明文 M + 解压器 11KB ≈ 1.33M", fillcolor="#ffe3e3"];
+  plain   [label="③ 解压完成　持有：明文 M（gzip 已 free）", fillcolor="#fff4d6"];
+  parsed  [label="④ 解析完成　明文 M + JsonDocument 结构（零拷贝，字符串指向 M）", fillcolor="#fff4d6"];
+  forward [label="⑤ 转发上游　逐条序列化，只有单条临时文档，不建 messages 全量数组", fillcolor="#e9f7ea"];
+  done    [label="⑥ 本轮结束　releasePlain() → 回到基线", fillcolor="#f2f2f2"];
+
+  idle   -> recv    [label=" 带 filename 的文件字段触发 upload 回调"];
+  recv   -> infl    [label=" gzipParse 读 ISIZE；origLen > payloadCap() 在此拦下 → 413"];
+  infl   -> plain   [label=" free(gzip String)"];
+  plain  -> parsed  [label=" deserializeJson(doc, buf, len)"];
+  parsed -> forward [label=" llmStream()"];
+  forward-> done    [label=" chunkResponseEnd() + releasePlain()"];
+
+  // 图例放在图的下方
+  graph [labelloc="b", labeljust="l", fontsize=11, fontname="Source Han Sans SC",
+    label=<
+<TABLE BORDER="1" COLOR="#a05a2c" CELLBORDER="0" CELLSPACING="5" CELLPADDING="4" BGCOLOR="#fdf1e6">
+  <TR><TD ALIGN="LEFT"><FONT POINT-SIZE="13"><B>这套流程各自消掉的副本（审查报告 #1–#4 与后加上传护栏）</B></FONT></TD></TR>
+  <TR><TD ALIGN="LEFT">#1　WebServer <B>_currentArgs</B> 整包副本 → 改走 upload 回调分块累积</TD></TR>
+  <TR><TD ALIGN="LEFT">#2　上游请求体落地 String → <B>measureJson</B> + <B>serializeJson</B> 直写 socket</TD></TR>
+  <TR><TD ALIGN="LEFT">#3　<B>messages</B> 全量数组 → 逐条序列化 + chunked 请求体</TD></TR>
+  <TR><TD ALIGN="LEFT">#4　传输体积与中间持有量 → 前端 gzip，板端 ROM <B>tinfl</B> 解压 + 零拷贝解析</TD></TR>
+  <TR><TD ALIGN="LEFT">护栏　写死的 200KB 上限比实际连续块还大 → <B>payloadCap()</B> 按剩余堆收紧（= 最大连续块 − 24KB），超限回 413</TD></TR>
+</TABLE>
+>];
+}

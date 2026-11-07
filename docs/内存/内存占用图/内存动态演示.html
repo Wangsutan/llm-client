@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESP32 内存：一次请求的占用变化</title>
+<style>
+  :root{
+    --bg:#fbfaf7; --fg:#1a1a1a; --dim:#5a5a5a; --line:#d8d4c8;
+    --rom:#b9b3a5; --data:#8fa8c8; --bss:#7e93ab;
+    --heap:#f9eccd; --used:#d9a441; --tls:#d96d6d;
+    --ok:#4a8a4a; --warn:#c06a1a; --bad:#b03030;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; padding:28px 20px 60px; background:var(--bg); color:var(--fg);
+    font-family:'Source Han Sans SC','Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif;
+    line-height:1.6;
+  }
+  .wrap{max-width:1080px;margin:0 auto}
+  h1{font-size:23px;margin:0 0 6px;letter-spacing:.5px}
+  .sub{color:var(--dim);font-size:13px;margin-bottom:26px}
+  .sub b{color:var(--fg);font-weight:600}
+
+  .panel{background:#fff;border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin-bottom:20px}
+  .panel h2{font-size:15px;margin:0 0 16px;font-weight:700;letter-spacing:.3px}
+  .panel h2 span{font-weight:400;color:var(--dim);font-size:12px;margin-left:8px}
+
+  .bar{display:flex;height:74px;border:1.5px solid #2b2b2b;border-radius:4px;overflow:hidden;background:#fff}
+  .seg{position:relative;transition:flex-basis .45s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;justify-content:center;
+       font-size:11px;overflow:hidden;white-space:nowrap}
+  .seg.rom{background:var(--rom);color:#3a3a30}
+  .seg.data{background:var(--data);color:#12293f}
+  .seg.bss{background:var(--bss);color:#0e1c28}
+  .seg.heapwrap{background:var(--heap);padding:0}
+  .heapinner{display:flex;height:100%;width:100%}
+  .hused{background:var(--used)}
+  .htls{background:var(--tls)}
+  .hfree{background:repeating-linear-gradient(45deg,#fbf7e8,#fbf7e8 5px,#f2ecd5 5px,#f2ecd5 10px)}
+  .axis{display:flex;justify-content:space-between;font-size:10.5px;color:#888;margin-top:6px}
+
+  .legend{display:flex;flex-wrap:wrap;gap:16px;margin-top:16px;font-size:11.5px;color:#444}
+  .legend i{display:inline-block;width:13px;height:11px;border:1px solid #999;border-radius:2px;margin-right:6px;vertical-align:-1px}
+
+  /* ---------- Flash bar ---------- */
+  .flashbar{display:flex;height:34px;border:1.5px solid #2b2b2b;border-radius:4px;overflow:hidden;background:#fff;margin-top:6px}
+  .fseg{position:relative;display:flex;align-items:center;justify-content:center;font-size:10px;color:#444;
+        overflow:hidden;white-space:nowrap;border-right:1px solid rgba(0,0,0,.12)}
+  .fseg:last-child{border-right:0}
+  .fseg.nvs{background:#c4dcb4}
+  .fseg.nvs.pulse{animation:nvspulse 1.1s ease-out}
+  @keyframes nvspulse{
+    0%{background:#c4dcb4;box-shadow:inset 0 0 0 0 rgba(200,120,20,0)}
+    18%{background:#f0b860;box-shadow:inset 0 0 0 2px rgba(200,120,20,.9)}
+    55%{background:#f0b860;box-shadow:inset 0 0 0 2px rgba(200,120,20,.9)}
+    100%{background:#c4dcb4;box-shadow:inset 0 0 0 0 rgba(200,120,20,0)}
+  }
+  .nvsflag{height:17px;margin-top:5px;font-size:11px;color:#8a5a10;opacity:0;transition:opacity .25s}
+  .nvsflag.on{opacity:1}
+  .flashhint{font-size:11px;color:#888;margin-top:10px}
+
+  .ctl{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-end}
+  .ctlgroup{display:flex;flex-direction:column;gap:8px}
+  .ctlgroup>label{font-size:11.5px;color:var(--dim);font-weight:600;letter-spacing:.4px}
+  .toggle{display:inline-flex;border:1px solid #bbb;border-radius:7px;overflow:hidden}
+  .toggle button{border:0;background:#fff;padding:8px 18px;font:inherit;font-size:12.5px;cursor:pointer;color:#555;transition:background .18s,color .18s}
+  .toggle button.on{background:#2b3a4a;color:#fff;font-weight:600}
+  .toggle button:not(.on):hover{background:#f0eee8}
+  .btn{background:#2b3a4a;color:#fff;border:0;border-radius:7px;padding:9px 20px;font:inherit;font-size:12.5px;cursor:pointer;transition:background .18s}
+  .btn:hover{background:#3d5064}
+  .btn:disabled{background:#aaa;cursor:default}
+
+  .phasebar{display:flex;margin-top:20px;height:34px;border-radius:6px;overflow:hidden;border:1px solid #ccc}
+  .phase{flex:1;display:flex;align-items:center;justify-content:center;font-size:11px;color:#555;background:#fff;
+         border-right:1px solid #e4e0d5;transition:background .35s,color .35s}
+  .phase:last-child{border-right:0}
+  .phase.active{background:#2b3a4a;color:#fff;font-weight:600}
+
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-top:22px}
+  .stat{background:#faf9f5;border:1px solid #e4e0d5;border-radius:8px;padding:12px 14px;transition:border-color .3s,background .3s}
+  .stat .k{font-size:11px;color:var(--dim);letter-spacing:.3px;margin-bottom:4px}
+  .stat .v{font-size:19px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.25}
+  .stat .u{font-size:11px;color:#888;font-weight:400}
+  .stat.bad{border-color:#e0a0a0;background:#fdf3f3}
+  .stat.bad .v{color:var(--bad)}
+  .stat.warn{border-color:#e0c090;background:#fdf8f0}
+  .stat.warn .v{color:var(--warn)}
+  .stat.ok .v{color:var(--ok)}
+
+  .verdict{margin-top:18px;padding:14px 16px;border-radius:8px;font-size:13px;border-left:4px solid #888;background:#f5f4f0;transition:all .3s}
+  .verdict.ok{border-left-color:var(--ok);background:#f2f8f2}
+  .verdict.warn{border-left-color:var(--warn);background:#fdf7ef}
+  .verdict.bad{border-left-color:var(--bad);background:#fdf2f2}
+  .verdict b{display:block;margin-bottom:4px;font-size:13.5px}
+
+  table{width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed}
+  th,td{text-align:left;padding:7px 10px;border-bottom:1px solid #eae6dc;
+        overflow-wrap:anywhere;word-break:break-word;vertical-align:top}
+  th{font-size:11px;color:var(--dim);font-weight:600;letter-spacing:.3px;border-bottom:1.5px solid #d8d4c8}
+  td.num{text-align:right;font-variant-numeric:tabular-nums}
+  tr:last-child td{border-bottom:0}
+  col.c-stage{width:16%}
+  col.c-what{width:44%}
+  col.c-amt{width:20%}
+  col.c-acc{width:20%}
+  .tag{font-size:10px;padding:1px 6px;border-radius:3px;font-weight:600;letter-spacing:.3px}
+  .tag.m{background:#e6f0e6;color:#2e6a2e}
+  .tag.d{background:#f0ece0;color:#7a6a30}
+
+  .foot{font-size:11.5px;color:var(--dim);line-height:1.75;margin-top:8px}
+  .foot code{background:#f0eee8;padding:1px 5px;border-radius:3px;font-size:11px}
+  .notebox{background:#fdf7ef;border:1px solid #e8d0a8;border-radius:8px;padding:12px 15px;font-size:12px;color:#6a4a10;margin-top:14px}
+  .notebox b{color:#8a5a10}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>ESP32-D0WD-V3 内存：一次请求期间的占用变化</h1>
+  <div class="sub">
+    llm-client @ <b>7b8e306</b>（2026-11-01 实测）·
+    <code>WebServer</code> 同步 + <code>handleClient()</code> 在主循环，
+    请求<b>严格串行</b>：上一个流式输出没结束，下一个连接进不来
+  </div>
+
+  <!-- ============ 1. DRAM ============ -->
+  <div class="panel">
+    <h2>DRAM 320 KB 分布 <span>块宽按字节真实比例</span></h2>
+
+    <div class="bar">
+      <div class="seg rom" id="segRom" title="ROM 数据 + BT 保留">ROM/BT</div>
+      <div class="seg data" id="segData" title=".data 已初始化全局"></div>
+      <div class="seg bss" id="segBss" title=".bss 未初始化全局"></div>
+      <div class="seg heapwrap" id="segHeapWrap" title="堆">
+        <div class="heapinner">
+          <div class="hused" id="hUsed"></div>
+          <div class="htls" id="hTls"></div>
+          <div class="hfree" id="hFree"></div>
+        </div>
+      </div>
+    </div>
+    <div class="axis">
+      <span>0x3FFAE000</span><span>0x3FFC0000</span><span>0x3FFD0000</span><span>0x40000000</span>
+    </div>
+
+    <div class="legend">
+      <span><i style="background:var(--rom)"></i>ROM 数据 + BT 保留 64,348</span>
+      <span><i style="background:var(--data)"></i>.data 25,413</span>
+      <span><i style="background:var(--bss)"></i>.bss 84,320</span>
+      <span><i style="background:var(--used)"></i>本次请求占用</span>
+      <span><i style="background:var(--tls)"></i>TLS 缓冲</span>
+      <span><i style="background:repeating-linear-gradient(45deg,#fbf7e8,#fbf7e8 3px,#f2ecd5 3px,#f2ecd5 6px)"></i>堆空闲</span>
+    </div>
+
+    <div style="margin-top:22px;padding-top:16px;border-top:1px dashed #ddd">
+      <div style="font-size:11.5px;font-weight:600;color:#444;margin-bottom:2px">
+        Flash 4 MB <span style="font-weight:400;color:#888">— 请求期间不动，只有改配置会写 nvs</span>
+      </div>
+      <div class="flashbar" id="flashBar">
+        <div class="fseg" style="flex-basis:0.0977%;background:#fff" title="保留/引导参数 4,096 B"></div>
+        <div class="fseg" style="flex-basis:0.5959%;background:#efe4cb" title="bootloader 24,992 B"></div>
+        <div class="fseg" style="flex-basis:0.0053%;background:#8fa8c8" title="分区表 224 B"></div>
+        <div class="fseg nvs" id="fsegNvs" style="flex-basis:0.4883%" title="nvs 20,480 B — 存 backend/model"></div>
+        <div class="fseg" style="flex-basis:0.1953%;background:#dcdcdc" title="otadata 8,192 B"></div>
+        <div class="fseg" style="flex-basis:0.1801%;background:#fff" title="未占 7,552 B"></div>
+        <div class="fseg" style="flex-basis:31.25%;background:#efe4cb" title="app0 1280 KB">app0</div>
+        <div class="fseg" style="flex-basis:31.25%;background:#fbfbfb;color:#999" title="app1 空槽 1280 KB">app1 空</div>
+        <div class="fseg" style="flex-basis:34.375%;background:#d9e8c8" title="LittleFS 1408 KB">LittleFS</div>
+        <div class="fseg" style="flex-basis:1.5625%;background:#e8c6c6" title="coredump 64 KB"></div>
+      </div>
+      <div class="nvsflag" id="nvsFlag">← nvs 扇区擦写（几十毫秒，期间 flash cache 被禁用）</div>
+      <div class="flashhint">
+        nvs 只有改 backend / model 时才写；聊一次天不会碰它。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 2. Playback ============ -->
+  <div class="panel">
+    <h2>一次请求的时间线 <span>点播放，看堆怎么涨怎么落</span></h2>
+
+    <div class="ctl">
+      <div class="ctlgroup">
+        <label>后端</label>
+        <div class="toggle" id="backendToggle">
+          <button data-be="ollama" class="on">Ollama 局域网（无 TLS）</button>
+          <button data-be="deepseek">DeepSeek 公网（TLS）</button>
+        </div>
+      </div>
+      <div class="ctlgroup">
+        <label>操作</label>
+        <div>
+          <button class="btn" id="playBtn">▶ 播放一次请求</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="phasebar">
+      <div class="phase" data-ph="idle">空闲</div>
+      <div class="phase" data-ph="recv">收请求</div>
+      <div class="phase" data-ph="tls">建连/TLS</div>
+      <div class="phase" data-ph="stream">流式接收</div>
+      <div class="phase" data-ph="tail">收尾</div>
+      <div class="phase" data-ph="release">归还</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat ok" id="stFree">
+        <div class="k">getFreeHeap</div>
+        <div class="v"><span id="vFree">155,408</span> <span class="u">B</span></div>
+      </div>
+      <div class="stat" id="stUsed">
+        <div class="k">本次请求占用</div>
+        <div class="v"><span id="vUsed">0</span> <span class="u">B</span></div>
+      </div>
+      <div class="stat ok" id="stContig">
+        <div class="k">最大连续块（实测）</div>
+        <div class="v"><span id="vContig">110.6</span> <span class="u">KB</span></div>
+      </div>
+      <div class="stat" id="stNeed">
+        <div class="k">本阶段最需连续</div>
+        <div class="v"><span id="vNeed">—</span> <span class="u">B</span></div>
+      </div>
+    </div>
+
+    <div class="verdict ok" id="verdict">
+      <b>空闲</b>
+      堆空闲 155,408 B，最大连续块 110,580 B（跑过一次 TLS 后降到 63,476 B，不复原）。
+    </div>
+  </div>
+
+  <!-- ============ 3. Breakdown ============ -->
+  <div class="panel">
+    <h2>一次请求在堆上新增什么 <span>各阶段累计</span></h2>
+    <table>
+      <colgroup>
+        <col class="c-stage"><col class="c-what"><col class="c-amt"><col class="c-acc">
+      </colgroup>
+      <thead>
+        <tr><th>阶段</th><th>堆上新增</th><th class="num">本阶段</th><th class="num">累计（当前后端）</th></tr>
+      </thead>
+      <tbody id="reqTable"></tbody>
+    </table>
+    <div class="notebox">
+      <b>TLS 是大头。</b>握手一次就多出 <b>46,644 B</b>（SSL 内容缓冲 16 KB×2 是
+      mbedtls 编译期常量，调小不了）。接 DeepSeek 时单请求峰值 <b>65,712–66,924 B</b>，
+      空闲堆从 155,408 B 掉到 <b>85,548 B</b>，最大连续块在发送请求体那一瞬掉到
+      <b>45,044 B</b>——这期间如果系统要临时分配大块，余量就没那么宽了。
+    </div>
+  </div>
+
+  <!-- ============ 4. Notes ============ -->
+  <div class="panel">
+    <h2>数据来源与局限</h2>
+    <div class="foot">
+      <b>实测</b>：DRAM 四段起止来自 link map；空闲 155,408 B、最大连续块
+      110,580 / 63,476 / 45,044 B、各阶段增量均来自 <code>memprobe</code> 串口埋点
+      （2026-11-01，见 <code>docs/内存/内存实测-探针-2026-11-01.md</code>）。
+      <br><br>
+      <b>各阶段数值</b>：同一轮请求里按 <code>[mem]</code> 行逐点采样，不再是估算；
+      收尾阶段 6–15 KB 峰值的具体分配点还没定位（<code>chunkWrite</code> 本身不分配）。
+      <br><br>
+      <b>为什么没有并发</b>：<code>web_server.cpp:14</code> 用的是同步 <code>WebServer</code>，
+      <code>handleChat</code> 从 <code>chunkResponseBegin</code> 一路阻塞到 <code>llmStream</code>
+      返回才结束；<code>webHandle()</code> 即 <code>server.handleClient()</code>，跑在主循环里。
+      同一时刻只能有一个请求在处理，不存在并发叠加的场景。
+      <br><br>
+      <b>其他存储为何不动</b>：一次请求只从堆取内存。
+      <code>.data</code> / <code>.bss</code> 是链接期定好的静态区，运行中不改；
+      ROM 数据 + BT 保留区由硬件与协议栈固定；
+      IRAM 存的是代码，请求跑起来不会变大；
+      Flash 里的 app0 与 LittleFS 只在烧录或写文件时变，聊天不碰。
+      <br><br>
+      <b>唯一会写 Flash 的动作是改配置</b>：<code>handleConfigPost</code> →
+      <code>llmSetBackend</code> → <code>gPrefs.putInt("backend", ...)</code>，
+      要擦写一个 nvs 扇区（几十毫秒，期间 flash cache 被禁用）。
+      代码在 <code>llm_client.cpp:42-45</code> 专门做了判断：值没变就不写。
+      上方的 nvs 色块闪烁就是对这一步的示意。
+      <br><br>
+      <b>没建模</b>：任务栈（loopTask 8 KB，实测空闲时用 2,868 B、TLS 深点用 4,192 B，
+      创建时 malloc、恒定）、IRAM（128 KB，运行期其空闲段并入内部分配器）。
+      <br><br>
+      <b>旧的 7,020 B 疑点已解</b>：那是拿 <code>161,784</code>（.bss 之后的 DRAM 段）当堆总量算的；
+      <code>getFreeHeap</code> 相对的是 <code>getHeapSize()=262,236 B</code>（DRAM 222,152 ＋ IRAM 40,084），
+      真实已分配 <b>106,808 B</b>，其中 WiFi/BT 保留窗 56.9 KB、.bss 之后 38.7 KB（含 8 KB 栈）。
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------- 实测常量（2026-11-01 memprobe） ----------
+  var DRAM_TOTAL = 335872;
+  var ROM_BT     = 64348;
+  var DATA       = 25413;
+  var BSS        = 84320;
+  var HEAP_TOTAL = 161784;                     // .bss 之后的 DRAM 段（链接期口径）
+
+  var HEAP_FREE_IDLE = 155408;                 // 串口实测 getFreeHeap
+  var HEAP_USED_IDLE = HEAP_TOTAL - HEAP_FREE_IDLE;   // 6,376
+
+  // 各阶段累计占用（不含空闲基线），单位 B
+  var STAGE = {
+    ollama:   {recv:0, tls:952,   stream:2908,  tail:12000},
+    deepseek: {recv:0, tls:46644, stream:65712, tail:10692}
+  };
+  var GZIP_EXTRA = 2180;       // gzip 路径：压缩体 String（带 2 KB 历史实测）
+  // 峰值时最大连续块（实测）：空闲 / 流式中
+  var CONTIG = {ollama: {idle:110580, stream:106484},
+                deepseek:{idle:63476,  stream:45044}};
+
+  var state = { backend:"ollama", phase:"idle", amt:0 };
+
+  function fmt(n){ return Math.round(n).toLocaleString("en-US"); }
+
+  function useTls(){ return state.backend === "deepseek"; }
+
+  // 各阶段累计占用（不含空闲基线）
+  function phaseAmt(p){
+    var st = STAGE[state.backend] || STAGE.ollama;
+    switch(p){
+      case "idle":    return 0;
+      case "recv":    return 0;          // 明文落 48 KB 静态工作区，不占堆
+      case "tls":     return st.tls;
+      case "stream":  return st.stream;
+      case "tail":    return st.tail;
+      case "release": return 0;
+    }
+    return 0;
+  }
+
+  // 本阶段最需要一次拿到的连续块
+  function phaseNeed(p){
+    if(p === "idle" || p === "release" || p === "recv") return 0;
+    if(useTls()) return 16384;      // SSL 内容缓冲（编译期常量）
+    return 5744;                    // lwIP TCP_SND_BUF
+  }
+
+  // 当前阶段的最大连续块（实测点）
+  function contigNow(){
+    var c = CONTIG[state.backend] || CONTIG.ollama;
+    if(state.phase === "idle" || state.phase === "recv" || state.phase === "release") return c.idle;
+    return c.stream;
+  }
+  function kb(n){ return (Math.round(n / 1024 * 10) / 10).toFixed(1); }
+
+  var el = {
+    segRom: document.getElementById("segRom"),
+    segData:document.getElementById("segData"),
+    segBss: document.getElementById("segBss"),
+    hUsed:  document.getElementById("hUsed"),
+    hTls:   document.getElementById("hTls"),
+    hFree:  document.getElementById("hFree"),
+    vFree:  document.getElementById("vFree"),
+    vUsed:  document.getElementById("vUsed"),
+    vContig:document.getElementById("vContig"),
+    vNeed:  document.getElementById("vNeed"),
+    stFree: document.getElementById("stFree"),
+    stUsed: document.getElementById("stUsed"),
+    stContig:document.getElementById("stContig"),
+    stNeed: document.getElementById("stNeed"),
+    verdict:document.getElementById("verdict")
+  };
+
+  function update(){
+    var amt    = state.amt;
+    var tls    = useTls() ? Math.min(STAGE.deepseek.tls, amt) : 0;
+    var other  = Math.max(amt - tls, 0);
+
+    var freeNow = HEAP_FREE_IDLE - amt;
+    var over    = freeNow < 0;
+
+    var cLo = over ? 0 : contigNow();
+    var cHi = cLo;
+    var need = phaseNeed(state.phase);
+
+    // ---- bar ----
+    el.segRom.style.flexBasis  = (ROM_BT / DRAM_TOTAL * 100).toFixed(3) + "%";
+    el.segData.style.flexBasis = (DATA / DRAM_TOTAL * 100).toFixed(3) + "%";
+    el.segBss.style.flexBasis  = (BSS / DRAM_TOTAL * 100).toFixed(3) + "%";
+    document.getElementById("segHeapWrap").style.flexBasis =
+      (HEAP_TOTAL / DRAM_TOTAL * 100).toFixed(3) + "%";
+
+    el.hUsed.style.flexBasis = (other / HEAP_TOTAL * 100) + "%";
+    el.hTls.style.flexBasis  = (tls / HEAP_TOTAL * 100) + "%";
+    el.hFree.style.flexBasis = (Math.max(freeNow, 0) / HEAP_TOTAL * 100) + "%";
+
+    el.segRom.textContent  = "64,348";
+    el.segData.textContent = "25,413";
+    el.segBss.textContent  = "84,320";
+
+    // ---- 读数 ----
+    el.vFree.textContent   = fmt(Math.max(freeNow, 0));
+    el.vUsed.textContent   = fmt(amt);
+    el.vContig.textContent = over ? "0" : kb(cLo);
+    el.vNeed.textContent   = need === 0 ? "—" : fmt(need);
+
+    // ---- 着色 ----
+    var contigRisk = !over && cLo < need;
+    el.stFree.className   = "stat " + (over ? "bad" : (freeNow < 40000 ? "warn" : "ok"));
+    el.stUsed.className   = "stat " + (amt > HEAP_TOTAL * 0.35 ? "warn" : "");
+    el.stContig.className = "stat " + (over ? "bad" : (contigRisk ? "warn" : "ok"));
+    el.stNeed.className   = "stat " + (contigRisk ? "warn" : "");
+
+    // ---- 结论 ----
+    var v = el.verdict, be = useTls() ? "DeepSeek" : "Ollama";
+    v.className = "verdict";
+
+    if(state.phase === "idle"){
+      v.classList.add("ok");
+      v.innerHTML = "<b>空闲</b>堆空闲 " + fmt(HEAP_FREE_IDLE) +
+        " B，最大连续块 " + fmt(contigNow()) + " B。没有请求在跑，余量最宽。";
+    } else if(over){
+      v.classList.add("bad");
+      v.innerHTML = "<b>超出堆容量</b>需要 " + fmt(amt) + " B，空闲只有 " +
+        fmt(HEAP_FREE_IDLE) + " B。这在实际里会触发分配失败，回答被截断。";
+    } else if(contigRisk){
+      v.classList.add("warn");
+      v.innerHTML = "<b>总量够，连续块吃紧</b>空闲还剩 " + fmt(freeNow) +
+        " B，但最大连续块只有 " + fmt(cLo) + " B，本阶段要一次拿 " + fmt(need) + " B。";
+    } else {
+      v.classList.add("ok");
+      v.innerHTML = "<b>" + be + " · " + amtLabel(state.phase) + "</b>本次请求占用 " +
+        fmt(amt) + " B，堆空闲 " + fmt(freeNow) + " B，最大连续块 " + fmt(cLo) + " B。";
+    }
+  }
+
+  function amtLabel(p){
+    return {recv:"收请求", tls:"建连/TLS", stream:"流式接收", tail:"收尾", release:"归还"}[p] || p;
+  }
+
+  // ---------- 明细表（按当前后端重建，数值为 memprobe 实测） ----------
+  function buildTable(){
+    var st = STAGE[state.backend] || STAGE.ollama;
+    // 累计列直接取实测累计值（各阶段占用互相重叠，不能相加）
+    var rows = [
+      ["收请求", "明文落 48 KB 静态工作区（gzip 另 +" + fmt(GZIP_EXTRA) + " B）", 0, 0],
+      ["建连/TLS", useTls() ? "握手：SSL 内容缓冲 16K×2 + mbedtls" : "TCP 建连（无 TLS）",
+       st.tls, st.tls],
+      ["流式接收", useTls() ? "发送请求体瞬间峰值" : "发请求 + 逐 delta 转发",
+       st.stream - st.tls, st.stream],
+      ["收尾", "chunk 回写 + 逐行序列化（6–15 KB）", st.tail, st.tail]
+    ];
+    var out = [];
+    rows.forEach(function(r){
+      out.push("<tr><td>" + r[0] + "</td><td>" + r[1] + "</td>" +
+               '<td class="num">' + fmt(r[2]) + "</td>" +
+               '<td class="num">' + fmt(r[3]) + "</td></tr>");
+    });
+    out.push("<tr><td>归还</td><td>全部释放，回到 " + fmt(HEAP_USED_IDLE) + " B 基线</td>" +
+             '<td class="num">−' + fmt(st.tail) + '</td><td class="num">0</td></tr>');
+    document.getElementById("reqTable").innerHTML = out.join("");
+  }
+  buildTable();
+
+  // ---------- 控件 ----------
+  var nvsEl   = document.getElementById("fsegNvs");
+  var nvsFlag = document.getElementById("nvsFlag");
+  var nvsTimer = null;
+
+  // 对应 llm_client.cpp:42-45 —— 值没变就不写 NVS
+  function pulseNvs(){
+    nvsEl.classList.remove("pulse");
+    nvsFlag.classList.remove("on");
+    // 强制回流，否则连续触发时动画不会重播
+    void nvsEl.offsetWidth;
+    nvsEl.classList.add("pulse");
+    nvsFlag.classList.add("on");
+    clearTimeout(nvsTimer);
+    nvsTimer = setTimeout(function(){
+      nvsEl.classList.remove("pulse");
+      nvsFlag.classList.remove("on");
+    }, 1400);
+  }
+
+  document.getElementById("backendToggle").addEventListener("click", function(e){
+    var b = e.target.closest("button");
+    if(!b) return;
+    var changed = (b.dataset.be !== state.backend);
+    [].forEach.call(this.querySelectorAll("button"), function(x){ x.classList.remove("on"); });
+    b.classList.add("on");
+    state.backend = b.dataset.be;
+    state.amt = phaseAmt(state.phase);
+    if(changed) pulseNvs();
+    buildTable();
+    update();
+  });
+
+  // ---------- 播放 ----------
+  var playBtn = document.getElementById("playBtn");
+  var playing = false, rafId = null;
+
+  function setPhase(p){
+    state.phase = p;
+    [].forEach.call(document.querySelectorAll(".phase"), function(x){
+      x.classList.toggle("active", x.dataset.ph === p);
+    });
+  }
+
+  function tweenTo(target, ms){
+    if(rafId) cancelAnimationFrame(rafId);
+    var from = state.amt, t0 = null;
+    function frame(ts){
+      if(t0 === null) t0 = ts;
+      var k = Math.min((ts - t0) / ms, 1);
+      var e = k < .5 ? 2*k*k : 1 - Math.pow(-2*k + 2, 2) / 2;
+      state.amt = from + (target - from) * e;
+      update();
+      if(k < 1) rafId = requestAnimationFrame(frame);
+      else { state.amt = target; update(); rafId = null; }
+    }
+    rafId = requestAnimationFrame(frame);
+  }
+
+  playBtn.addEventListener("click", function(){
+    if(playing) return;
+    playing = true;
+    playBtn.disabled = true;
+    playBtn.textContent = "播放中…";
+
+    var seq = ["recv","tls","stream","tail","release"];
+    var i = 0;
+    setPhase("idle");
+    tweenTo(0, 400);
+
+    setTimeout(function step(){
+      if(i >= seq.length){
+        state.amt = 0;
+        update();
+        setPhase("idle");
+        playing = false;
+        playBtn.disabled = false;
+        playBtn.textContent = "▶ 播放一次请求";
+        return;
+      }
+      var p = seq[i++];
+      setPhase(p);
+      // 过渡 700ms（归还 900ms），停留 2400ms（归还 1500ms）
+      tweenTo(phaseAmt(p), p === "release" ? 900 : 700);
+      setTimeout(step, p === "release" ? 1500 : 2400);
+    }, 400);
+  });
+
+  // ---------- init ----------
+  state.amt = 0;
+  setPhase("idle");
+  update();
+})();
+</script>
+</body>
+</html>
